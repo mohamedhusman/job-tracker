@@ -18,9 +18,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(
-    signDto: LogDto,
-  ): Promise<{ accessToken: string; message: string; username: string }> {
+  async signIn(signDto: LogDto) {
     try {
       const existUser = await this.UserModel.findOne({
         username: signDto.username,
@@ -41,12 +39,11 @@ export class AuthService {
       });
       await newUser.save();
       const payload = { sub: newUser._id, username: newUser.username };
-      const { username, ...rest } = newUser;
 
       return {
         accessToken: await this.jwtService.signAsync(payload),
         message: 'login successful',
-        username: username,
+        username: { username: newUser.username, userId: newUser._id },
       };
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -82,6 +79,7 @@ export class AuthService {
       return {
         accessToken,
         message: 'login success!',
+        username: { username: userExist.username, userId: userExist._id },
       };
     } catch (error) {
       if (error instanceof BadRequestException) {

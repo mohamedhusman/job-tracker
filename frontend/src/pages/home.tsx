@@ -1,12 +1,17 @@
 import { useState } from "react";
 import "../index.css";
 import { FaBriefcase, FaMapMarkerAlt, FaClipboardCheck } from "react-icons/fa";
+import { useAuthStore } from "../store/useAuthStore";
 
 const Home = () => {
+  // states
   const [openAddField, setOpenAddField] = useState<boolean>(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [openEditJob, setOpenEditJob] = useState<boolean>(false);
   const [openDeleteJob, setOpenDeleteJob] = useState<boolean>(false);
+
+  //store state
+  const { authUser } = useAuthStore();
 
   return (
     <div className="flex flex-col gap-7  justify-center items-center">
@@ -14,7 +19,7 @@ const Home = () => {
       <div className="flex justify-center items-center w-[600px] max-h-[300px] sm:w-[700px] md:w-[800px] lg:w-[1000px] xl:w-[1400px] max-sm:h-[250px] p-[3rem] bg-purple-700  shadow-2xl border-2  border-transparent rounded-b-[40%]">
         <div className="flex flex-col items-center justify-center">
           <h1 className="sm:text-4xl text-2xl text-white font-bold">
-            Welcome Back User
+            welcome back {authUser?.username.username}
           </h1>
           <p className="text-lg text-white mt-2">
             Keep an eye on your jobs and stay productive!
@@ -43,6 +48,13 @@ const Home = () => {
               </label>
             </div>
           </div>
+        </div>
+
+        {/*logout button */}
+        <div className="absolute top-4 right-4">
+          <button className="bg-white text-purple-700 px-4 py-2 rounded-lg shadow-md hover:bg-purple-200 transition duration-300">
+            Logout
+          </button>
         </div>
       </div>
 

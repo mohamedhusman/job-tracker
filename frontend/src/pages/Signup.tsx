@@ -10,7 +10,7 @@ const Signup = () => {
     password: "",
   });
 
-  const { signUp, isSigningUp, authUser } = useAuthStore();
+  const { signUp, isSigningUp } = useAuthStore();
 
   const validateForm = () => {
     if (!formData.username.trim()) return toast.error("username is required");
@@ -21,8 +21,9 @@ const Signup = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const success = validateForm();
-    if (success == true) signUp(formData);
-    console.log(authUser);
+    if (success === true) {
+      signUp(formData);
+    }
   };
 
   return (
@@ -51,7 +52,7 @@ const Signup = () => {
         <div className="flex flex-col  py-2  mx-5 ">
           <label className="text-sm font-sans sm:text-lg">password</label>
           <input
-            type="text"
+            type="password"
             className=" h-[2rem] sm:h-[3rem]  px-2 border-1 border-purple-900 rounded-lg py-1.5 text-xs sm:text-[1rem]"
             placeholder="password"
             value={formData.password}

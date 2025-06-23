@@ -3,18 +3,26 @@ import {
   Controller,
   Post,
   Res,
-  UseGuards,
+  Get,
   ValidationPipe,
+  Req,
 } from '@nestjs/common';
 import { LogDto } from './dto/user.dto';
 import { AuthService } from './auth.service';
-import { Response } from 'express';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Request, Response } from 'express';
 import { Public } from './decorators/decorator.public';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(private AuthService: AuthService) {}
+
+  @Get('check')
+  getProfile(@Req() req: Request) {
+    return {
+      username: req.user,
+      message: 'Authenticated',
+    };
+  }
 
   @Public()
   @Post('signup')
@@ -43,7 +51,7 @@ export class AuthController {
     @Body(new ValidationPipe()) loginDto: LogDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, message } = await this.AuthService.login(loginDto);
+    const { accessToken, ...rest } = await this.AuthService.login(loginDto);
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
@@ -56,7 +64,7 @@ export class AuthController {
     // res.setHeader('Authorization', `Bearer ${accessToken}`);
     // console.log(accessToken);
 
-    return message;
+    return rest;
   }
 
   @Post('logout')
