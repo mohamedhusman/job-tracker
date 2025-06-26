@@ -68,7 +68,13 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(@Res() res: Response) {
-    res.clearCookie('access_token');
+  async logout(@Res() res: Response) {
+    try {
+      res.clearCookie('access_token');
+
+      return res.status(200).json({ message: 'Logout successful' }); // ✅ Explicitly send response
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to logout' });
+    }
   }
 }

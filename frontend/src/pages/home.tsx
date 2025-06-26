@@ -1,17 +1,86 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../index.css";
 import { FaBriefcase, FaMapMarkerAlt, FaClipboardCheck } from "react-icons/fa";
 import { useAuthStore } from "../store/useAuthStore";
+import { useJobStore } from "../store/useJobStore";
+import toast from "react-hot-toast";
 
 const Home = () => {
+  //store state
+  const { authUser, logOut } = useAuthStore();
+  const { jobsData, fetchJobs, addJob, update } = useJobStore();
+
   // states
   const [openAddField, setOpenAddField] = useState<boolean>(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [filteredJobs, setFilteredJobs] = useState<any>(jobsData);
   const [openEditJob, setOpenEditJob] = useState<boolean>(false);
   const [openDeleteJob, setOpenDeleteJob] = useState<boolean>(false);
+  const [updateJobId, setUpdateJobId] = useState<string>("");
+  const [jobData, setJobData] = useState({
+    author: authUser?.username.userId ?? "",
+    companyName: "",
+    jobTitle: "",
+    description: "",
+    location: "",
+    status: "applied",
+  });
 
-  //store state
-  const { authUser } = useAuthStore();
+  //jobs fetching
+  fetchJobs(authUser?.username.userId ?? "");
+
+  useEffect(() => {
+    if (statusFilter === "all") {
+      setFilteredJobs(jobsData);
+    } else {
+      setFilteredJobs(
+        jobsData.filter((job: any) => job.status === statusFilter)
+      );
+    }
+  }, [jobsData, statusFilter]);
+
+  const handleJobAdd = () => {
+    try {
+      addJob(jobData);
+      setJobData({
+        author: authUser?.username.userId ?? "",
+        companyName: "",
+        jobTitle: "",
+        description: "",
+        location: "",
+        status: "applied",
+      });
+      fetchJobs(authUser?.username.userId ?? "");
+      setOpenAddField(!openAddField);
+    } catch (error) {
+      toast.error("something went wrong");
+    }
+  };
+
+  // const [updateJobData, setUpdateJobData] = useState({
+  //   id: filteredJobs._id,
+  //   companyName: filteredJobs.companyName,
+  //   jobTitle: filteredJobs.jobTitle,
+  //   description: filteredJobs.description,
+  //   location: filteredJobs.location,
+  //   status: filteredJobs.status,
+  // });
+
+  // const handleJobUpdate = () => {
+  //   try {
+  //     update(updateJobData.id, {
+  //       companyName: updateJobData.companyName,
+  //       jobTitle: updateJobData.jobTitle,
+  //       description: updateJobData.description,
+  //       location: updateJobData.location,
+  //       status: updateJobData.status,
+  //     });
+  //     toast.success("Job updated successfully");
+  //     setOpenEditJob(!openEditJob);
+  //   } catch (error) {
+  //     toast.error("something went wrong");
+  //   }
+  // };
 
   return (
     <div className="flex flex-col gap-7  justify-center items-center">
@@ -41,7 +110,7 @@ const Home = () => {
                 >
                   <option value="all">All</option>
                   <option value="applied">Applied</option>
-                  <option value="interview">Interview</option>
+                  <option value="interviewing">Interviewing</option>
                   <option value="offer">Offer</option>
                   <option value="rejected">Rejected</option>
                 </select>
@@ -52,7 +121,10 @@ const Home = () => {
 
         {/*logout button */}
         <div className="absolute top-4 right-4">
-          <button className="bg-white text-purple-700 px-4 py-2 rounded-lg shadow-md hover:bg-purple-200 transition duration-300">
+          <button
+            className="bg-white text-purple-700 px-4 py-2 rounded-lg shadow-md hover:bg-purple-200 transition duration-300"
+            onClick={() => logOut()}
+          >
             Logout
           </button>
         </div>
@@ -60,33 +132,32 @@ const Home = () => {
 
       {/* job cards section */}
       <div className="flex flex-wrap flex-row max-w-[1400px] justify-center items-center gap-7 overflow-hidden">
-        {Array.from({ length: 7 }).map((_, index) => (
+        {filteredJobs.map((job: any) => (
           <div
-            key={index}
+            key={job._id}
             className="flex flex-col w-[300px] h-[400px] bg-purple-500 m-2 rounded-lg shadow-lg outline-4 outline-black outline-offset-3 outline-double relative"
             style={{
               clipPath: "polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 13%)",
             }}
           >
             <div className="flex flex-col items-start justify-center h-ful p-10">
-              <h2 className="text-white text-2xl font-semibold mb-2">Google</h2>
+              <h2 className="text-white text-2xl font-semibold mb-2">
+                {job.companyName}
+              </h2>
               <div className="text-white flex gap-3 items-center text-sm mb-1">
                 <FaBriefcase />{" "}
-                <span className="font-medium">Web developer</span>
+                <span className="font-medium">{job.jobTitle}</span>
               </div>
               <div className="text-white flex gap-3 items-center text-sm mb-1">
                 <FaMapMarkerAlt />{" "}
-                <span className="font-medium">Kandy Sri lanka</span>
+                <span className="font-medium"> {job.location} </span>
               </div>
               <div className="text-white flex gap-3 items-center text-sm mb-3">
                 <FaClipboardCheck />{" "}
-                <span className="font-medium">Applied</span>
+                <span className="font-medium"> {job.status}</span>
               </div>
 
-              <p className="text-white text-xl mt-2">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut,
-                corp
-              </p>
+              <p className="text-white text-xl mt-2">{job.description}</p>
             </div>
             <div
               className="flex gap-4 absolute bottom-4 right-4
@@ -94,7 +165,11 @@ const Home = () => {
             >
               <button
                 className="text-2xl text-white hover:text-gray-200"
-                onClick={() => setOpenEditJob(true)}
+                onClick={() => {
+                  setOpenEditJob(true);
+                  setUpdateJobId(job._id);
+                  console.log(updateJobId);
+                }}
               >
                 Edit
               </button>
@@ -117,25 +192,57 @@ const Home = () => {
 
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative z-10">
               <h2 className="text-2xl font-semibold mb-4">Add New Job</h2>
-              <form className="flex flex-col gap-4">
+              <form className="flex flex-col gap-4" onSubmit={handleJobAdd}>
                 <input
                   type="text"
                   placeholder="Job Title"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500 "
+                  value={jobData.jobTitle}
+                  onChange={(e) =>
+                    setJobData({ ...jobData, jobTitle: e.target.value })
+                  }
                 />
                 <input
                   type="text"
                   placeholder="Company Name"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                  value={jobData.companyName}
+                  onChange={(e) =>
+                    setJobData({ ...jobData, companyName: e.target.value })
+                  }
                 />
                 <input
                   type="text"
                   placeholder="Location"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                  value={jobData.location}
+                  onChange={(e) =>
+                    setJobData({ ...jobData, location: e.target.value })
+                  }
                 />
+                <div>
+                  <label htmlFor="status">Status: </label>
+                  <select
+                    id="status"
+                    className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                    value={jobData.status}
+                    onChange={(e) =>
+                      setJobData({ ...jobData, status: e.target.value })
+                    }
+                  >
+                    <option value="applied">Applied</option>
+                    <option value="interviewing">Interviewing</option>
+                    <option value="offer">Offer</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
                 <textarea
                   placeholder="Job Description"
                   className="p-2 border border-gray-300 rounded h-[100px] focus:outline-purple-500"
+                  value={jobData.description}
+                  onChange={(e) =>
+                    setJobData({ ...jobData, description: e.target.value })
+                  }
                 ></textarea>
                 <button
                   type="submit"
@@ -168,20 +275,48 @@ const Home = () => {
                   type="text"
                   placeholder="Job Title"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500 "
+                  // value={updateJobData.jobTitle}
+                  // onChange={(e) =>
+                  //   setUpdateJobData({
+                  //     ...updateJobData,
+                  //     jobTitle: e.target.value,
+                  //   })
+                  // }
                 />
                 <input
                   type="text"
                   placeholder="Company Name"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                  // value={updateJobData.companyName}
+                  // onChange={(e) =>
+                  //   setUpdateJobData({
+                  //     ...updateJobData,
+                  //     companyName: e.target.value,
+                  //   })
+                  // }
                 />
                 <input
                   type="text"
                   placeholder="Location"
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                  // value={updateJobData.location}
+                  // onChange={(e) =>
+                  //   setUpdateJobData({
+                  //     ...updateJobData,
+                  //     location: e.target.value,
+                  //   })
+                  // }
                 />
                 <textarea
                   placeholder="Job Description"
                   className="p-2 border border-gray-300 rounded h-[100px] focus:outline-purple-500"
+                  // value={updateJobData.description}
+                  // onChange={(e) =>
+                  //   setUpdateJobData({
+                  //     ...updateJobData,
+                  //     description: e.target.value,
+                  //   })
+                  // }
                 ></textarea>
                 <button
                   type="submit"

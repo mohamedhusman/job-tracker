@@ -10,16 +10,19 @@ export class Job {
   companyName: string;
 
   @Prop({ required: true })
+  jobTitle: string;
+
+  @Prop({ required: true })
   status: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   author: mongoose.Types.ObjectId;
 
   //optional fields
-  @Prop({})
+  @Prop({ isRequired: false })
   location?: string;
 
-  @Prop()
+  @Prop({ isRequired: false })
   description?: string;
 }
 

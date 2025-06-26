@@ -7,7 +7,9 @@ export class AddJobDto {
   @IsString()
   @IsNotEmpty()
   status: string;
-
+  @IsString()
+  @IsNotEmpty()
+  jobTitle: string;
   @IsOptional()
   @IsString()
   location?: string;
@@ -20,7 +22,13 @@ export class AddJobDto {
 export class UpdateJobDto {
   @IsString()
   @IsOptional()
+  companyName: string;
+  @IsString()
+  @IsOptional()
   status?: string;
+  @IsString()
+  @IsOptional()
+  jobTitle?: string;
   @IsString()
   @IsOptional()
   location?: string;

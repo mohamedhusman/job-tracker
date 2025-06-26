@@ -7,7 +7,7 @@ import {
 import { AddJobDto, UpdateJobDto } from './dto/dtos';
 import { InjectModel } from '@nestjs/mongoose';
 import { Job } from 'src/database/schemas/Job.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class JobService {
@@ -17,17 +17,21 @@ export class JobService {
   addJob(addJobDto: AddJobDto) {
     const newJob = new this.jobModel({
       companyName: addJobDto.companyName,
+      jobTitle: addJobDto.jobTitle,
       status: addJobDto.status,
       location: addJobDto.location,
       description: addJobDto.description,
       author: addJobDto.author,
     });
+
     return newJob.save();
   }
 
   //Method to fetch all jobs
-  async getJobs() {
-    const jobs = await this.jobModel.find().exec();
+  async getJobs(id: string) {
+    const jobs = await this.jobModel
+      .find({ author: new Types.ObjectId(id) })
+      .exec();
     return jobs;
   }
 
@@ -36,12 +40,14 @@ export class JobService {
     try {
       // Validate if id is a correct MongoDB ObjectId
       if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        return new BadRequestException(`Invalid job ID format: ${id}`);
+        return new BadRequestException(`Invalid ID: ${id}`);
       }
       const updatedJob = await this.jobModel.findByIdAndUpdate(
         id,
         {
+          companyName: updateJobDto.companyName,
           status: updateJobDto.status,
+          jobTitle: updateJobDto.jobTitle,
           location: updateJobDto.location,
           description: updateJobDto.description,
         },

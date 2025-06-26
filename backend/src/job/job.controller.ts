@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   ValidationPipe,
 } from '@nestjs/common';
 import { JobService } from './job.service';
@@ -20,12 +21,12 @@ export class JobController {
     return this.jobService.addJob(addJobDto);
   }
 
-  @Get('getjobs')
-  getJobs() {
-    return this.jobService.getJobs();
+  @Post('getjobs')
+  getJobs(@Body() id: string) {
+    return this.jobService.getJobs(id);
   }
 
-  @Patch('updatejob/:id')
+  @Put('updatejob/:id')
   updateJob(
     @Param('id') id: string,
     @Body(new ValidationPipe()) updateJobDto: UpdateJobDto,

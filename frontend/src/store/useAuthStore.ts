@@ -17,11 +17,11 @@ interface useAuthStore {
   authUser: AuthUser | null;
   isSigningUp: boolean;
   isLoggingIn: boolean;
-
   isCheckingAuth: boolean;
   signUp: (data: Data) => Promise<void>;
   logIn: (data: Data) => Promise<void>;
   checkAuth: () => Promise<void>;
+  logOut: () => void;
 }
 
 export const useAuthStore = create<useAuthStore>((set, get) => ({
@@ -62,7 +62,7 @@ export const useAuthStore = create<useAuthStore>((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data.username });
+      set({ authUser: res.data });
       if (get().authUser) redirect("/");
       toast.success(res.data.message);
     } catch (error: any) {
@@ -70,6 +70,17 @@ export const useAuthStore = create<useAuthStore>((set, get) => ({
       toast.error(message);
     } finally {
       set({ isLoggingIn: false });
+    }
+  },
+
+  logOut: async () => {
+    try {
+      const res = await axiosInstance.post("/auth/logout");
+      set({ authUser: null });
+      toast.success(res.data.message);
+    } catch (error) {
+      console.log(error);
+      toast.error("something went wrong, Logout failed");
     }
   },
 }));
