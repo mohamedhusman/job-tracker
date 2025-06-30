@@ -42,22 +42,37 @@ export class JobService {
       if (!id.match(/^[0-9a-fA-F]{24}$/)) {
         return new BadRequestException(`Invalid ID: ${id}`);
       }
+
+      const prevDta = await this.jobModel.findById(id);
+      if (!prevDta) {
+        return new NotFoundException(`Job with id ${id} not found`);
+      }
       const updatedJob = await this.jobModel.findByIdAndUpdate(
         id,
         {
-          companyName: updateJobDto.companyName,
-          status: updateJobDto.status,
-          jobTitle: updateJobDto.jobTitle,
-          location: updateJobDto.location,
-          description: updateJobDto.description,
+          companyName:
+            updateJobDto?.companyName !== ''
+              ? updateJobDto?.companyName
+              : prevDta.companyName,
+          status:
+            updateJobDto?.status !== '' ? updateJobDto?.status : prevDta.status,
+          jobTitle:
+            updateJobDto?.jobTitle !== ''
+              ? updateJobDto?.jobTitle
+              : prevDta.jobTitle,
+          location:
+            updateJobDto?.location !== ''
+              ? updateJobDto?.location
+              : prevDta.location,
+          description:
+            updateJobDto?.description !== ''
+              ? updateJobDto?.description
+              : prevDta.description,
         },
         { new: true },
       );
-      if (!updatedJob) {
-        return new NotFoundException(`Job with id ${id} not found`);
-      }
 
-      return updatedJob;
+      return { message: 'Job updated successfully' };
     } catch (error) {
       throw new Error(`Error updating job with id ${id}: ${error.message}`);
     }
@@ -70,7 +85,7 @@ export class JobService {
       if (!deletedId)
         return new NotFoundException(`Job with id ${id} not found`);
 
-      return deletedId;
+      return { message: 'Job deleted successfully' };
     } catch (error) {
       throw new Error(`Error in deleting id ${id}: ${error.message}`);
     }

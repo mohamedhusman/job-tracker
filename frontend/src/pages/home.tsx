@@ -8,7 +8,15 @@ import toast from "react-hot-toast";
 const Home = () => {
   //store state
   const { authUser, logOut } = useAuthStore();
-  const { jobsData, fetchJobs, addJob, update } = useJobStore();
+  const {
+    jobsData,
+    fetchJobs,
+    addJob,
+    setSelectedUSer,
+    selectedUser,
+    update,
+    deleteJob,
+  } = useJobStore();
 
   // states
   const [openAddField, setOpenAddField] = useState<boolean>(false);
@@ -16,7 +24,7 @@ const Home = () => {
   const [filteredJobs, setFilteredJobs] = useState<any>(jobsData);
   const [openEditJob, setOpenEditJob] = useState<boolean>(false);
   const [openDeleteJob, setOpenDeleteJob] = useState<boolean>(false);
-  const [updateJobId, setUpdateJobId] = useState<string>("");
+  //add job data state
   const [jobData, setJobData] = useState({
     author: authUser?.username.userId ?? "",
     companyName: "",
@@ -25,9 +33,15 @@ const Home = () => {
     location: "",
     status: "applied",
   });
+  //update job data state
 
-  //jobs fetching
-  fetchJobs(authUser?.username.userId ?? "");
+  const [updateJobData, setUpdateJobData] = useState({
+    companyName: "",
+    jobTitle: "",
+    description: "",
+    location: "",
+    status: "",
+  });
 
   useEffect(() => {
     if (statusFilter === "all") {
@@ -37,9 +51,17 @@ const Home = () => {
         jobsData.filter((job: any) => job.status === statusFilter)
       );
     }
-  }, [jobsData, statusFilter]);
+  }, [statusFilter, jobsData]);
 
-  const handleJobAdd = () => {
+  //jobs fetching
+  useEffect(() => {
+    if (authUser) {
+      fetchJobs(authUser?.username.userId ?? "");
+    }
+  }, [authUser]);
+
+  const handleJobAdd = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       addJob(jobData);
       setJobData({
@@ -57,30 +79,21 @@ const Home = () => {
     }
   };
 
-  // const [updateJobData, setUpdateJobData] = useState({
-  //   id: filteredJobs._id,
-  //   companyName: filteredJobs.companyName,
-  //   jobTitle: filteredJobs.jobTitle,
-  //   description: filteredJobs.description,
-  //   location: filteredJobs.location,
-  //   status: filteredJobs.status,
-  // });
+  const handleJobUpdate = () => {
+    try {
+      update(selectedUser._id, updateJobData);
+      setOpenEditJob(!openEditJob);
+      fetchJobs(authUser?.username.userId ?? "");
+    } catch (error: any) {
+      toast.error(error.message || "something went wrong");
+    }
+  };
 
-  // const handleJobUpdate = () => {
-  //   try {
-  //     update(updateJobData.id, {
-  //       companyName: updateJobData.companyName,
-  //       jobTitle: updateJobData.jobTitle,
-  //       description: updateJobData.description,
-  //       location: updateJobData.location,
-  //       status: updateJobData.status,
-  //     });
-  //     toast.success("Job updated successfully");
-  //     setOpenEditJob(!openEditJob);
-  //   } catch (error) {
-  //     toast.error("something went wrong");
-  //   }
-  // };
+  const handleDeleteJob = () => {
+    deleteJob(selectedUser._id);
+    setOpenDeleteJob(false);
+    fetchJobs(authUser?.username.userId ?? "");
+  };
 
   return (
     <div className="flex flex-col gap-7  justify-center items-center">
@@ -96,7 +109,10 @@ const Home = () => {
           <div className="flex mt-4 gap-4">
             <button
               className="ml-4 bg-white text-purple-700 px-4 py-2 rounded-lg shadow-md hover:bg-purple-200 transition duration-300"
-              onClick={() => setOpenAddField(true)}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                setOpenAddField(true);
+              }}
             >
               Add Job
             </button>
@@ -132,56 +148,59 @@ const Home = () => {
 
       {/* job cards section */}
       <div className="flex flex-wrap flex-row max-w-[1400px] justify-center items-center gap-7 overflow-hidden">
-        {filteredJobs.map((job: any) => (
-          <div
-            key={job._id}
-            className="flex flex-col w-[300px] h-[400px] bg-purple-500 m-2 rounded-lg shadow-lg outline-4 outline-black outline-offset-3 outline-double relative"
-            style={{
-              clipPath: "polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 13%)",
-            }}
-          >
-            <div className="flex flex-col items-start justify-center h-ful p-10">
-              <h2 className="text-white text-2xl font-semibold mb-2">
-                {job.companyName}
-              </h2>
-              <div className="text-white flex gap-3 items-center text-sm mb-1">
-                <FaBriefcase />{" "}
-                <span className="font-medium">{job.jobTitle}</span>
-              </div>
-              <div className="text-white flex gap-3 items-center text-sm mb-1">
-                <FaMapMarkerAlt />{" "}
-                <span className="font-medium"> {job.location} </span>
-              </div>
-              <div className="text-white flex gap-3 items-center text-sm mb-3">
-                <FaClipboardCheck />{" "}
-                <span className="font-medium"> {job.status}</span>
-              </div>
-
-              <p className="text-white text-xl mt-2">{job.description}</p>
-            </div>
+        {filteredJobs &&
+          filteredJobs.map((job: any) => (
             <div
-              className="flex gap-4 absolute bottom-4 right-4
-            "
+              key={job._id}
+              className="flex flex-col w-[300px] h-[400px] bg-purple-500 m-2 rounded-lg shadow-lg outline-4 outline-black outline-offset-3 outline-double relative"
+              style={{
+                clipPath: "polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 13%)",
+              }}
             >
-              <button
-                className="text-2xl text-white hover:text-gray-200"
-                onClick={() => {
-                  setOpenEditJob(true);
-                  setUpdateJobId(job._id);
-                  console.log(updateJobId);
-                }}
+              <div className="flex flex-col items-start justify-center h-ful p-10">
+                <h2 className="text-white text-2xl font-semibold mb-2">
+                  {job.companyName}
+                </h2>
+                <div className="text-white flex gap-3 items-center text-sm mb-1">
+                  <FaBriefcase />{" "}
+                  <span className="font-medium">{job.jobTitle}</span>
+                </div>
+                <div className="text-white flex gap-3 items-center text-sm mb-1">
+                  <FaMapMarkerAlt />{" "}
+                  <span className="font-medium"> {job.location} </span>
+                </div>
+                <div className="text-white flex gap-3 items-center text-sm mb-3">
+                  <FaClipboardCheck />{" "}
+                  <span className="font-medium"> {job.status}</span>
+                </div>
+
+                <p className="text-white text-xl mt-2">{job.description}</p>
+              </div>
+              <div
+                className="flex gap-4 absolute bottom-4 right-4
+            "
               >
-                Edit
-              </button>
-              <button
-                className="text-2xl text-red-200 hover:text-red-400"
-                onClick={() => setOpenDeleteJob(true)}
-              >
-                Delete
-              </button>
+                <button
+                  className="text-2xl text-white hover:text-gray-200"
+                  onClick={() => {
+                    setOpenEditJob(true);
+                    setSelectedUSer(job);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-2xl text-red-200 hover:text-red-400"
+                  onClick={() => {
+                    setOpenDeleteJob(true);
+                    setSelectedUSer(job);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       {/* job adding field */}
@@ -270,53 +289,72 @@ const Home = () => {
 
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative z-10">
               <h2 className="text-2xl font-semibold mb-4">Edit Job</h2>
-              <form className="flex flex-col gap-4">
+              <form className="flex flex-col gap-4" onSubmit={handleJobUpdate}>
                 <input
                   type="text"
-                  placeholder="Job Title"
+                  placeholder={selectedUser.jobTitle}
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500 "
-                  // value={updateJobData.jobTitle}
-                  // onChange={(e) =>
-                  //   setUpdateJobData({
-                  //     ...updateJobData,
-                  //     jobTitle: e.target.value,
-                  //   })
-                  // }
+                  value={updateJobData.jobTitle}
+                  onChange={(e) =>
+                    setUpdateJobData({
+                      ...updateJobData,
+                      jobTitle: e.target.value,
+                    })
+                  }
                 />
                 <input
                   type="text"
-                  placeholder="Company Name"
+                  placeholder={selectedUser.companyName}
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
-                  // value={updateJobData.companyName}
-                  // onChange={(e) =>
-                  //   setUpdateJobData({
-                  //     ...updateJobData,
-                  //     companyName: e.target.value,
-                  //   })
-                  // }
+                  value={updateJobData.companyName}
+                  onChange={(e) =>
+                    setUpdateJobData({
+                      ...updateJobData,
+                      companyName: e.target.value,
+                    })
+                  }
                 />
                 <input
                   type="text"
-                  placeholder="Location"
+                  placeholder={selectedUser.location}
                   className="p-2 border border-gray-300 rounded focus:outline-purple-500"
-                  // value={updateJobData.location}
-                  // onChange={(e) =>
-                  //   setUpdateJobData({
-                  //     ...updateJobData,
-                  //     location: e.target.value,
-                  //   })
-                  // }
+                  value={updateJobData.location}
+                  onChange={(e) =>
+                    setUpdateJobData({
+                      ...updateJobData,
+                      location: e.target.value,
+                    })
+                  }
                 />
+                <div>
+                  <label htmlFor="status">Status: </label>
+                  <select
+                    id="status"
+                    className="p-2 border border-gray-300 rounded focus:outline-purple-500"
+                    value={updateJobData.status}
+                    onChange={(e) =>
+                      setUpdateJobData({
+                        ...updateJobData,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="applied">Applied</option>
+                    <option value="interviewing">Interviewing</option>
+                    <option value="offer">Offer</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
                 <textarea
-                  placeholder="Job Description"
+                  placeholder={selectedUser.description}
                   className="p-2 border border-gray-300 rounded h-[100px] focus:outline-purple-500"
-                  // value={updateJobData.description}
-                  // onChange={(e) =>
-                  //   setUpdateJobData({
-                  //     ...updateJobData,
-                  //     description: e.target.value,
-                  //   })
-                  // }
+                  value={updateJobData.description}
+                  onChange={(e) =>
+                    setUpdateJobData({
+                      ...updateJobData,
+                      description: e.target.value,
+                    })
+                  }
                 ></textarea>
                 <button
                   type="submit"
@@ -343,22 +381,26 @@ const Home = () => {
             <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-0"></div>
 
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative z-10">
-              <h2 className="text-2xl font-semibold mb-4">Delete Job</h2>
-              <p className="mb-4">Are you sure you want to delete this job?</p>
-              <div className="flex justify-end gap-4">
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                  onClick={() => setOpenDeleteJob(false)}
-                >
-                  Delete
-                </button>
-                <button
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition duration-300"
-                  onClick={() => setOpenDeleteJob(false)}
-                >
-                  Cancel
-                </button>
-              </div>
+              <form onSubmit={handleDeleteJob}>
+                <h2 className="text-2xl font-semibold mb-4">Delete Job</h2>
+                <p className="mb-4">
+                  Are you sure you want to delete this job?
+                </p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                    type="submit"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition duration-300"
+                    onClick={() => setOpenDeleteJob(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </>
